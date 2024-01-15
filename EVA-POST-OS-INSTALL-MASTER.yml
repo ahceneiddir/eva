@@ -1,0 +1,30 @@
+---
+- name: Master Playbook
+  hosts: servers
+  become: yes
+
+  tasks:
+
+    - name: Set root Passwordless SSH
+      import_tasks: tasks/post-os-install/root-ssh-copy-key.yml
+
+    - name: Configure Firewall
+      import_tasks: tasks/post-os-install/firewall.yml
+
+    - name: Partition Disk
+      import_tasks: tasks/post-os-install/partition.yml
+
+    - name: Hammer User Creation
+      import_tasks: tasks/post-os-install/hammer-creation.yml
+
+    - name: Copy Files
+      import_tasks: tasks/post-os-install/copy-files.yml
+
+    - name: Install Packages
+      import_tasks: tasks/post-os-install/install-packages.yml
+
+    - name: Set SELinux to Permissive
+      import_tasks: tasks/post-os-install/selinux-permissive.yml
+
+    - name: Reboot
+      import_tasks: tasks/post-os-install/reboot.yml
