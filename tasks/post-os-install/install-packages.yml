@@ -1,0 +1,20 @@
+---
+- name: Copy rhel86.repo and install packages on RHEL 8
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Copy rhel86.repo to /etc/yum.repos.d/
+      copy:
+        src: /ativa-infrastructure/terraform-data/eva_migration_scripts/rhel86.repo
+        dest: /etc/yum.repos.d/rhel86.repo
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Refresh DNF cache and list repositories
+      command: dnf repolist
+
+    - name: Install packages using DNF
+      command: dnf install -y yum-utils wget net-tools nfs-utils chrony
+

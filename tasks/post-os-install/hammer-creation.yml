@@ -1,0 +1,48 @@
+---
+- name: Create User, Set Password, Add to wheel, Enable sudoers, and Update Authorized Key
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Create user 'hammer' with home directory and shell
+      user:
+        name: hammer
+        home: /home/hammer
+        shell: /bin/bash
+        createhome: yes
+
+    - name: Set password for user 'hammer'
+      user:
+        name: hammer
+        password: "{{ 'hamerpwd' | password_hash('sha512', 'mysecretsalt') }}"  # Replace 'mysecretsalt' with your own salt value
+
+    - name: Ensure the 'wheel' group exists
+      group:
+        name: wheel
+        state: present
+
+    - name: Add user 'hammer' to the 'wheel' group
+      user:
+        name: hammer
+        groups: wheel
+        append: yes  # Append user to the group if it already exists
+
+    - name: Ensure SSH directory exists for the user
+      file:
+        path: "/home/hammer/.ssh"
+        state: directory
+        owner: hammer
+        group: hammer
+        mode: '0700'
+
+    - name: Copy the public key to the authorized_keys file
+      authorized_key:
+        user: hammer
+        key: "{{ lookup('file', '/home/hammer/.ssh/id_rsa.pub') }}"
+
+    - name: Allow members of wheel group to execute any command with sudo
+      lineinfile:
+        path: /etc/sudoers
+        line: "%wheel   ALL=(ALL) NOPASSWD:ALL"
+        validate: 'visudo -cf %s'
+

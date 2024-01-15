@@ -1,0 +1,79 @@
+---
+- name: Configure Disk and Mount Points
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Create Partition /dev/sdb1
+      parted:
+        device: /dev/sdb
+        number: 1
+        state: present
+        part_end: 500MB
+        fs_type: ext4
+
+    - name: Create Partition /dev/sdb2
+      parted:
+        device: /dev/sdb
+        number: 2
+        state: present
+        part_start: 500MB
+        part_end: 700MB
+        fs_type: ext4
+
+    - name: Format /dev/sdb1 as ext4
+      filesystem:
+        fstype: ext4
+        dev: /dev/sdb1
+
+    - name: Format /dev/sdb2 as ext4
+      filesystem:
+        fstype: ext4
+        dev: /dev/sdb2
+
+    - name: Create /data directory
+      file:
+        path: /data
+        state: directory
+        mode: '0755'
+
+    - name: Create /debug directory
+      file:
+        path: /debug
+        state: directory
+        mode: '0755'
+
+    - name: Get UUID of /dev/sdb1
+      command: blkid -s UUID -o value /dev/sdb1
+      register: uuid_sdb1
+
+    - name: Get UUID of /dev/sdb2
+      command: blkid -s UUID -o value /dev/sdb2
+      register: uuid_sdb2
+
+    - name: Mount /dev/sdb1 to /data using UUID
+      mount:
+        path: /data
+        src: UUID={{ uuid_sdb1.stdout }}
+        fstype: ext4
+        state: mounted
+        opts: defaults
+
+    - name: Mount /dev/sdb2 to /debug using UUID
+      mount:
+        path: /debug
+        src: UUID={{ uuid_sdb2.stdout }}
+        fstype: ext4
+        state: mounted
+        opts: defaults
+
+    - name: Add /etc/fstab entry for /dev/sdb1 using UUID
+      lineinfile:
+        path: /etc/fstab
+        line: "UUID={{ uuid_sdb1.stdout }} /data ext4 defaults 0 0"
+
+    - name: Add /etc/fstab entry for /dev/sdb2 using UUID
+      lineinfile:
+        path: /etc/fstab
+        line: "UUID={{ uuid_sdb2.stdout }} /debug ext4 defaults 0 0"
+
