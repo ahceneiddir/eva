@@ -1,0 +1,45 @@
+---
+- name: Configure DNS, /etc/hosts, hostname, and FQDN for resol.com
+  hosts: EVA
+  become: yes
+
+  vars:
+    dns_search_domains:
+      - verizon.com
+      - vzbi.com
+    dns_nameservers:
+      - 166.37.162.103
+      - 138.83.162.53
+
+  tasks:
+    - name: Ensure /etc/resolv.conf exists
+      file:
+        path: /etc/resolv.conf
+        state: touch
+        mode: '0644'
+
+    - name: Update /etc/resolv.conf
+      lineinfile:
+        path: /etc/resolv.conf
+        line: |
+          search {{ dns_search_domains | join(' ') }}
+          nameserver {{ dns_nameservers[0] }}
+          nameserver {{ dns_nameservers[1] }}
+
+    - name: Set hostname
+      hostname:
+        name: "{{ ansible_hostname }}"
+
+    - name: Update /etc/hosts with FQDN entry
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ ansible_default_ipv4.address }} {{ ansible_fqdn }} {{ ansible_hostname }}"
+        regexp: "^{{ ansible_default_ipv4.address }}.*{{ ansible_fqdn }}.*{{ ansible_hostname }}"
+        state: present
+    - name: Update /etc/hosts with FQDN entry
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ ansible_default_ipv4.address }} {{ ansible_hostname }}.vzbi.com {{ ansible_hostname }}"
+        regexp: "^{{ ansible_default_ipv4.address }}.*{{ ansible_hostname }}.*{{ ansible_hostname }}"
+        state: present
+

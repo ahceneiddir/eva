@@ -1,0 +1,42 @@
+---
+- name: Execute command inside Docker container and save result
+  hosts: localhost
+  become: true
+  become_user: hammer
+  tasks:
+    - name: Copy system-config.yaml to system-config.yaml.bak
+      copy:
+        src: /ativa-infrastructure/terraform-data/system-config.yaml
+        dest: /ativa-infrastructure/terraform-data/system-config.yaml.bak
+        owner: root
+        group: root
+        mode: '0666'  # Set permissions
+
+    - name: Copy system-config.yaml.new to system-config.yaml
+      copy:
+        src: /ativa-infrastructure/terraform-data/system-config.yaml.new
+        dest: /ativa-infrastructure/terraform-data/system-config.yaml
+        owner: root
+        group: root
+        mode: '0666'  # Set permissions
+
+    - name: Copy common-config.yaml to common-config.yaml.bak
+      copy:
+        src: /ativa-infrastructure/terraform-data/common-config.yaml
+        dest: /ativa-infrastructure/terraform-data/common-config.yaml.bak
+        owner: root
+        group: root
+        mode: '0644'  # Set permissions
+
+    - name: Ensure Docker is started
+      service:
+        name: docker
+        state: started
+
+    - name: Start Docker container if not running
+      command: docker start nla-deployer
+      ignore_errors: yes
+
+    - name: Run command inside Docker container to change directory
+      command: docker exec nla-deployer sh -c "ait systemBom generate --functions-config vars/functions.yaml --system-config vars/system-config.yaml --output-folder vars"
+

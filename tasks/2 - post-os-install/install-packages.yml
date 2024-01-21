@@ -1,6 +1,6 @@
 ---
-- name: Copy rhel86.repo and install packages on RHEL 8
-  hosts: servers
+- name: Copy rhel86.repo and install packages on RHEL 8 Maybe add this part during the OS install
+  hosts: EVA
   become: yes
 
   tasks:

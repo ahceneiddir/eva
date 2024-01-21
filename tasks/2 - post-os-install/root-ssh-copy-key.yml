@@ -1,6 +1,6 @@
 ---
 - name: Set root Passwordless SSH
-  hosts: servers
+  hosts: EVA
   become: yes
   tasks:
     - name: Copy SSH key to authorized_keys

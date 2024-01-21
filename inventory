@@ -1,0 +1,3 @@
+[EVA]
+#list of EVA server to migrate ONLY!!!
+msp2100n-11790 ansible_host=106.40.226.126

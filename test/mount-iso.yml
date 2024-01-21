@@ -1,0 +1,26 @@
+---
+- hosts: EVA
+  connection: local
+- name: Install RHEL 8 on Physical Server
+  hosts: 166.34.96.80
+  become: yes
+  gather_facts: yes
+
+  vars:
+    nfs_username: "admin"
+    nfs_password: "123Infovista!"
+    idrac_username: "root"
+    idrac_password: "HmrixM"
+    rhel_iso_path: "{{ nfs_username }}:{{ nfs_password }}@165.122.135.39:/nfs_share/rhel-8.6-x86_64-dvd.iso"
+    rhel_mount_path: "/mnt/rhel_iso"
+    kickstart_file: "/data/ks.cfg"
+
+  tasks:
+    - name: Mount RHEL ISO
+      ansible.builtin.mount:
+        src: "{{ rhel_iso_path }}"
+        path: "{{ rhel_mount_path }}"
+        fstype: iso9660
+        opts: loop
+        state: mounted
+      when: not ansible_mounts | selectattr('mount', 'equalto', rhel_mount_path) | list

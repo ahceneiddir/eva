@@ -1,0 +1,42 @@
+---
+- name: Execute command inside Docker container and save result
+  hosts: localhost
+  become: true
+  become_user: hammer
+  tasks:
+    - name: Copy configuration.yml to configuration.yml.bak
+      copy:
+        src: /ativa-infrastructure/terraform-data/configuration.yml
+        dest: /ativa-infrastructure/terraform-data/configuration.yml.bak
+        owner: root
+        group: root
+        mode: '0644'  # Set permissions
+
+    - name: Copy configuration.yml.new to configuration.yml
+      copy:
+        src: /ativa-infrastructure/terraform-data/configuration.yml.new
+        dest: /ativa-infrastructure/terraform-data/configuration.yml
+        owner: root
+        group: root
+        mode: '0644'  # Set permissions
+
+    - name: Ensure Docker is started
+      service:
+        name: docker
+        state: started
+
+    - name: Start Docker container if not running
+      command: docker start installer
+      ignore_errors: yes
+
+    - name: Run command inside Docker container to change directory
+      command: docker exec installer sh -c "cd /klerity_precheck"
+
+    - name: Run command inside Docker container to execute precheck
+      command: docker exec installer sh -c "./execute_precheck.sh"
+
+    - name: Run command inside Docker container to change directory
+      command: docker exec installer sh -c "cd /terraform/projects/environments/customer"
+
+    - name: Run command inside Docker container to execute precheck
+      command: docker exec installer sh -c "terraform apply -state vars/terraform-installer.tfstate"

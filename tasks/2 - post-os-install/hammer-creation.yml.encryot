@@ -1,20 +1,24 @@
 ---
 - name: Create User, Set Password, Add to wheel, Enable sudoers, and Update Authorized Key
-  hosts: servers
+  hosts: EVA
   become: yes
 
   tasks:
-    - name: Create user 'hammer' with home directory and shell
+    - name: Set variables
+      set_fact:
+        hammer_user: "hammer"
+
+    - name: Create user with home directory and shell
       user:
-        name: hammer
-        home: /home/hammer
+        name: "{{ hammer_user }}"
+        home: "/home/{{ hammer_user }}"
         shell: /bin/bash
         createhome: yes
 
     - name: Set password for user 'hammer'
       user:
-        name: hammer
-        password: "{{ 'hamerpwd' | password_hash('sha512', 'mysecretsalt') }}"  # Replace 'mysecretsalt' with your own salt value
+        name: "{{ hammer_user }}"
+        password: "$6$NMF0VW7/.OrWLqx2$36CtbtiIexkMtRsZkR7CMuNLNoRW3uV7px1a/J2u4zdq5xLxmmG5sspLT90NMwLbkcx.LvZhFjnrwKtbk1yMA/"
 
     - name: Ensure the 'wheel' group exists
       group:
@@ -23,26 +27,26 @@
 
     - name: Add user 'hammer' to the 'wheel' group
       user:
-        name: hammer
+        name: "{{ hammer_user }}"
         groups: wheel
         append: yes  # Append user to the group if it already exists
 
     - name: Ensure SSH directory exists for the user
       file:
-        path: "/home/hammer/.ssh"
+        path: "/home/{{ hammer_user }}/.ssh"
         state: directory
-        owner: hammer
-        group: hammer
+        owner: "{{ hammer_user }}"
+        group: "{{ hammer_user }}"
         mode: '0700'
 
     - name: Copy the public key to the authorized_keys file
       authorized_key:
-        user: hammer
-        key: "{{ lookup('file', '/home/hammer/.ssh/id_rsa.pub') }}"
+        user: "{{ hammer_user }}"
+        key: "{{ lookup('file', '/home/{{ hammer_user }}/.ssh/id_rsa.pub') }}"
 
     - name: Allow members of wheel group to execute any command with sudo
-      lineinfile:
+      replace:
         path: /etc/sudoers
-        line: "%wheel   ALL=(ALL) NOPASSWD:ALL"
-        validate: 'visudo -cf %s'
+        regexp: '# %wheel.*'
+        replace: '%wheel        ALL=(ALL)       NOPASSWD: ALL'
 

@@ -1,0 +1,54 @@
+---
+- name: Create User, Set Password, Add to wheel, Enable sudoers, and Update Authorized Key
+  hosts: EVA
+  become: yes
+  vars_files:
+    - ../../secret/vault_passwords.yml
+
+  tasks:
+    - name: Set variables
+      set_fact:
+        hammer_user: "hammer"
+
+    - name: Create user with home directory and shell
+      ansible.builtin.user:
+        name: "{{ hammer_user }}"
+        home: "/home/{{ hammer_user }}"
+        shell: /bin/bash
+        createhome: yes
+
+    - name: Set password for user using Ansible Vault
+      ansible.builtin.user:
+        name: "{{ hammer_user }}"
+        password: "{{ vault_secret['hammer_password'] | password_hash('sha512') }}"
+
+    - name: Ensure the 'wheel' group exists
+      ansible.builtin.group:
+        name: wheel
+        state: present
+
+    - name: Add user 'hammer' to the 'wheel' group
+      ansible.builtin.user:
+        name: "{{ hammer_user }}"
+        groups: wheel
+        append: yes
+
+    - name: Ensure SSH directory exists for the user
+      ansible.builtin.file:
+        path: "/home/{{ hammer_user }}/.ssh"
+        state: directory
+        owner: "{{ hammer_user }}"
+        group: "{{ hammer_user }}"
+        mode: '0700'
+
+    - name: Copy the public key to the authorized_keys file
+      ansible.builtin.authorized_key:
+        user: "{{ hammer_user }}"
+        key: "{{ lookup('file', '/home/{{ hammer_user }}/.ssh/id_rsa.pub') }}"
+
+    - name: Allow members of wheel group to execute any command with sudo
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        line: '%wheel        ALL=(ALL)       NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+

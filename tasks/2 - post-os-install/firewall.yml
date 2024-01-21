@@ -1,6 +1,6 @@
 ---
 - name: Stop and Disable firewalld
-  hosts: servers
+  hosts: EVA
   become: yes
 
   tasks:

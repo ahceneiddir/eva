@@ -1,6 +1,6 @@
 ---
 - name: Master Playbook
-  hosts: servers
+  hosts: EVA
   become: yes
 
   tasks:

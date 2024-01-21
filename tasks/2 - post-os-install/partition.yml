@@ -1,6 +1,6 @@
 ---
 - name: Configure Disk and Mount Points
-  hosts: servers
+  hosts: EVA
   become: yes
 
   tasks:

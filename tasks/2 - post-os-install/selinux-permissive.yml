@@ -1,0 +1,11 @@
+---
+- name: Replace SELINUX=enable with SELINUX=permissive in /etc/sysconfig/selinux
+  hosts: EVA
+  become: yes
+
+  tasks:
+    - name: Replace SELINUX=enable with SELINUX=permissive in /etc/sysconfig/selinux
+      replace:
+        path: /etc/sysconfig/selinux
+        regexp: 'SELINUX=enforcing'
+        replace: 'SELINUX=permissive'

@@ -1,6 +1,6 @@
 ---
 - name: Reboot Server
-  hosts: servers
+  hosts: EVA
   become: yes
 
   tasks:

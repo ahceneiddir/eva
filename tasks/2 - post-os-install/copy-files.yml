@@ -1,0 +1,23 @@
+---
+- name: Copy and Set Permissions
+  hosts: EVA
+  become: yes
+
+  tasks:
+
+    - name: Copy ca-additional.pem to /etc/pki/tls/certs/
+      copy:
+        src: /ativa-infrastructure/terraform-data/ca-additional.pem
+        dest: /etc/pki/tls/certs/
+        owner: root
+        group: root
+        mode: '0777'  # Set full permissions
+
+
+    - name: Copy verify.sh script to /data/
+      copy:
+        src: /root/ansbile_script/eva/verify.sh
+        dest: /data/
+        owner: root
+        group: root
+        mode: '0777'  # Set full permissions
